@@ -13,7 +13,7 @@ import java.sql.Statement;
  * @date 2017年11月18日
  */
 public class PgConnect {
-	public static void main(String[] args) {
+	public void pg() {
 		Connection connection = null;
 		Statement statement = null;
 		try {
@@ -47,5 +47,20 @@ public class PgConnect {
 				}
 			}
 		}
+	}
+
+	public static Connection getPgConnect() {
+		Connection connection = null;
+		String url = "jdbc:postgresql://192.168.200.152:5432/taz_production";
+		String user = "taz";
+		String password = "taz";
+		try {
+			Class.forName("org.postgresql.Driver");
+			connection = DriverManager.getConnection(url, user, password);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return connection;
 	}
 }

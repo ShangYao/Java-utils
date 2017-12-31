@@ -4,7 +4,7 @@ package com.jinanlongen.flume.interceptors;
 *  this version adaptation to items.1.1.1.json
 * @author shangyao  
 * @date 2017年11月17日 
-* @scope test 
+* @scope produce
 */
 
 import java.io.File;
@@ -16,6 +16,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.flume.Context;
 import org.apache.flume.Event;
 import org.apache.flume.interceptor.Interceptor;
@@ -44,6 +45,7 @@ public class ARTD_WInterceptor implements Interceptor {
 		byte[] eventBody = event.getBody();
 		Map<String, String> headers = event.getHeaders();
 		String origBody = new String(eventBody, this.charset);
+		origBody = origBody.replaceAll("\\r\\n|\\r|\\n", "");
 		String[] body_arr = origBody.split(",");
 
 		String basename = headers.get("basename");
@@ -52,25 +54,25 @@ public class ARTD_WInterceptor implements Interceptor {
 			event.setBody("".getBytes());
 			return event;
 		}
-		if (body_arr.length < 11) {
+		if (body_arr.length < 10) {
 			errofile(basename, origBody, "L-");
 			event.setBody("".getBytes());
 			return event;
 		}
-		if (!GetProp.getARTDWprops().containsKey(body_arr[5])) {
+		if (!GetProp.getARTDWprops().containsKey(body_arr[5]) || !GetProp.getARTDWIDprops().containsKey(body_arr[5])) {
 			erro(body_arr[5], "Gender");
 			errofile(basename, origBody, "A-");
 			event.setBody("".getBytes());
 			return event;
 		}
-		if (!GetProp.getARTDWprops().containsKey(body_arr[3])) {
+		if (!GetProp.getARTDWprops().containsKey(body_arr[3]) || !GetProp.getARTDWIDprops().containsKey(body_arr[3])) {
 			erro(body_arr[3], "Brand");
 			errofile(basename, origBody, "A-");
 			event.setBody("".getBytes());
 			return event;
 		}
-		if (!GetProp.getARTDWprops().containsKey(body_arr[1])) {
-			erro(body_arr[1], "Category");
+		if (!GetProp.getARTDWprops().containsKey(body_arr[1]) || !GetProp.getARTDWIDprops().containsKey(body_arr[1])) {
+			erro(body_arr[1], "Taxon");
 			errofile(basename, origBody, "A-");
 			event.setBody("".getBytes());
 			return event;
@@ -82,14 +84,14 @@ public class ARTD_WInterceptor implements Interceptor {
 		trace_info.put("app", "flume");
 		trace_info.put("file_name", basename);
 
-		obj.put("version", "1.1.1");
-		obj.put("command", "explore");
+		obj.put("version", "1.0.0");
+		obj.put("command", "DISCOVER");
 		obj.put("trace", trace_info);
 
 		JSONObject items_info = getItems(body_arr, headers);
 		JSONArray items_arry = new JSONArray().put(items_info);
 		obj.put("items", items_arry);
-		obj.put("references", getreference(body_arr));
+		obj.put("references", getreference(body_arr, headers));
 
 		byte[] modifiedEvent = obj.toString().getBytes();
 		event.setBody(modifiedEvent);
@@ -99,56 +101,91 @@ public class ARTD_WInterceptor implements Interceptor {
 	public JSONObject getimage(String[] body_arr, int a, String str) {
 		JSONObject image1_info = new JSONObject();
 		image1_info.put("item_type", "Image");
-		image1_info.put("item_id", getSpuRocid(body_arr) + "::Red::" + str);
+		image1_info.put("item_id", getSpuRocid(body_arr) + "::::" + str);
 		image1_info.put("url", body_arr[a]);
-		image1_info.put("origin", " true");
-		image1_info.put("type", " ");
+		image1_info.put("path", "/areatrend_w/" + DigestUtils.md5Hex(body_arr[a]) + ".jpg");
+		image1_info.put("init", new Boolean("true"));
+		image1_info.put("origin", new Boolean("true"));
+		image1_info.put("type", str);
 		return image1_info;
 
 	}
 
-	public JSONArray getreference(String[] body_arr) {
+	public JSONArray getreference(String[] body_arr, Map<String, String> headers) {
 		JSONArray reference_arry = new JSONArray();
 
 		JSONObject album_info = new JSONObject();
 		album_info.put("item_type", "Album");
-		album_info.put("item_id", getSpuRocid(body_arr) + "::Red");
+		album_info.put("item_id", getSpuRocid(body_arr) + "::" + body_arr[0]);
 		JSONArray album_arry = new JSONArray();
 		JSONObject album1 = new JSONObject();
 		album1.put("item_type", "Image");
-		album1.put("item_id", getSpuRocid(body_arr) + "::Red::1");
+		album1.put("item_id", getSpuRocid(body_arr) + "::::main");
 
+		album_arry.put(album1);
+		album_arry.put(album1);
+		album_arry.put(album1);
+		album_arry.put(album1);
+		album_arry.put(album1);
 		album_arry.put(album1);
 
 		album_info.put("images", album_arry);
 
-		reference_arry.put(getimage(body_arr, 2, "1"));
+		reference_arry.put(getimage(body_arr, 2, "main"));
 
 		reference_arry.put(album_info);
 
-		reference_arry.put(getsku(body_arr));
+		reference_arry.put(getsku(body_arr, headers));
 		return reference_arry;
 
 	}
 
-	public JSONObject getsku(String[] body_arr) {
+	public JSONObject getsku(String[] body_arr, Map<String, String> headers) {
 		JSONObject sku_info = new JSONObject();
 		sku_info.put("item_type", "Sku");
 		sku_info.put("item_id", getSkuRocid(body_arr));
-		sku_info.put("meta", "");
+		sku_info.put("meta", getSkumeta(headers));
 		sku_info.put("steady_info", getsteady(body_arr));
 		sku_info.put("dyno_info", getdyno(body_arr));
 		return sku_info;
 
 	}
 
+	public JSONObject getSkumeta(Map<String, String> headers) {
+		JSONObject info = new JSONObject();
+		info.put("timestamp", stringToLong(headers.get("timestamp")));
+		return info;
+
+	}
+
+	public Integer stringToInt(String str) {
+
+		int i = Integer.parseInt(str);
+		return i;
+
+	}
+
+	public Double stringToDouble(String str) {
+
+		double i = Double.parseDouble(str);
+		return i;
+
+	}
+
+	public Long stringToLong(String str) {
+
+		Long i = Long.parseLong(str);
+		return i;
+
+	}
+
 	public JSONObject getdyno(String[] body_arr) {
 		JSONObject info = new JSONObject();
 		info.put("currency", "USD");
-		info.put("list_price", body_arr[6]);
-		info.put("price", body_arr[7]);
-		info.put("stock", body_arr[9]);
-		info.put("availability", "true");
+		info.put("list_price", stringToDouble(body_arr[6]));
+		info.put("price", stringToDouble(body_arr[7]));
+		info.put("stock", stringToInt(body_arr[9]));
+		info.put("availability", new Boolean("true"));
 		info.put("availability_reason", "");
 		return info;
 
@@ -157,17 +194,10 @@ public class ARTD_WInterceptor implements Interceptor {
 	public JSONObject getsteady(String[] body_arr) {
 		JSONObject stead_info = new JSONObject();
 
-		JSONArray dimention_arry = new JSONArray();
-		dimention_arry.put(getskudimention(body_arr, "color"));
-		dimention_arry.put(getskudimention(body_arr, "size"));
-		stead_info.put("dimensions", dimention_arry);
-
 		JSONObject album_info = new JSONObject();
 		album_info.put("item_type", "Album");
-		album_info.put("item_id", getSpuRocid(body_arr) + "::Red");
+		album_info.put("item_id", getSpuRocid(body_arr) + "::");
 		stead_info.put("album", album_info);
-
-		stead_info.put("bullets", getbullts(body_arr));
 
 		stead_info.put("upc", "");
 		stead_info.put("mpn", body_arr[0]);
@@ -180,25 +210,6 @@ public class ARTD_WInterceptor implements Interceptor {
 
 	}
 
-	public JSONObject getbullts(String[] body_arr) {
-		JSONObject info = new JSONObject();
-		info.put("title", "");
-		info.put("feature", "");
-		info.put("description", "");
-
-		return info;
-
-	}
-
-	public JSONObject getskudimention(String[] body_arr, String str) {
-		JSONObject info = new JSONObject();
-		info.put("item_type", "Dimension::" + str);
-		info.put("item_id", "");
-
-		return info;
-
-	}
-
 	public void errofile(String basename, String origBody, String pref) {
 		String filename = GetProp.getARTDWprops().getString("errofilefold") + "artdw-" + pref + basename;
 		File file = new File(filename);
@@ -206,7 +217,7 @@ public class ARTD_WInterceptor implements Interceptor {
 		try {
 			out = new FileOutputStream(file, true);
 			out.write(origBody.getBytes());
-			// out.write("\r\n".getBytes());
+			out.write("\r\n".getBytes());
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -278,13 +289,17 @@ public class ARTD_WInterceptor implements Interceptor {
 	public JSONObject getmeta(String[] body_arr, Map<String, String> headers) {
 		JSONObject meta_info = new JSONObject();
 		meta_info.put("source_site_code", "ARTD_W");
-		meta_info.put("all_skus", "false");
-		meta_info.put("gender", GetProp.getARTDWprops().getString(body_arr[5]));
-		meta_info.put("brand", GetProp.getARTDWprops().getString(body_arr[3]));
-		meta_info.put("category", GetProp.getARTDWprops().getString(body_arr[1]));
+		meta_info.put("source_site_id", 119);
+		meta_info.put("all_skus", new Boolean("false"));
+		meta_info.put("gender_code", GetProp.getARTDWprops().getString(body_arr[5]));
+		meta_info.put("gender_id", stringToInt(GetProp.getARTDWIDprops().getString(body_arr[5])));
+		meta_info.put("brand_code", GetProp.getARTDWprops().getString(body_arr[3]));
+		meta_info.put("brand_id", stringToInt(GetProp.getARTDWIDprops().getString(body_arr[3])));
+		meta_info.put("taxon_code", GetProp.getARTDWprops().getString(body_arr[1]));
+		meta_info.put("taxon_id", stringToInt(GetProp.getARTDWIDprops().getString(body_arr[1])));
 
 		meta_info.put("url", "");
-		meta_info.put("timestamp", headers.get("timestamp"));
+		meta_info.put("timestamp", stringToLong(headers.get("timestamp")));
 		meta_info.put("status_code", "NORMAL");
 		return meta_info;
 

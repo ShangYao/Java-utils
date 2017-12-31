@@ -20,7 +20,11 @@ import com.jd.open.api.sdk.request.imgzone.ImgzonePictureQueryRequest;
 import com.jd.open.api.sdk.request.imgzone.ImgzonePictureUploadRequest;
 import com.jd.open.api.sdk.request.list.CategoryReadFindAttrByIdRequest;
 import com.jd.open.api.sdk.request.list.CategoryReadFindAttrsByCategoryIdRequest;
+import com.jd.open.api.sdk.request.list.CategoryReadFindValuesByAttrIdJosRequest;
 import com.jd.open.api.sdk.request.list.CategoryReadFindValuesByIdJosRequest;
+import com.jd.open.api.sdk.request.list.CategoryReadFindValuesByIdRequest;
+import com.jd.open.api.sdk.request.list.PopVenderCenerVenderBrandQueryRequest;
+import com.jd.open.api.sdk.request.sellercat.SellerCatsGetRequest;
 import com.jd.open.api.sdk.request.ware.PriceWriteUpdateSkuJdPriceRequest;
 import com.jd.open.api.sdk.request.ware.PriceWriteUpdateWareMarketPriceRequest;
 import com.jd.open.api.sdk.request.ware.SkuReadFindSkuByIdRequest;
@@ -35,7 +39,11 @@ import com.jd.open.api.sdk.response.imgzone.ImgzonePictureQueryResponse;
 import com.jd.open.api.sdk.response.imgzone.ImgzonePictureUploadResponse;
 import com.jd.open.api.sdk.response.list.CategoryReadFindAttrByIdResponse;
 import com.jd.open.api.sdk.response.list.CategoryReadFindAttrsByCategoryIdResponse;
+import com.jd.open.api.sdk.response.list.CategoryReadFindValuesByAttrIdJosResponse;
 import com.jd.open.api.sdk.response.list.CategoryReadFindValuesByIdJosResponse;
+import com.jd.open.api.sdk.response.list.CategoryReadFindValuesByIdResponse;
+import com.jd.open.api.sdk.response.list.PopVenderCenerVenderBrandQueryResponse;
+import com.jd.open.api.sdk.response.sellercat.SellerCatsGetResponse;
 import com.jd.open.api.sdk.response.ware.PriceWriteUpdateSkuJdPriceResponse;
 import com.jd.open.api.sdk.response.ware.PriceWriteUpdateWareMarketPriceResponse;
 import com.jd.open.api.sdk.response.ware.SkuReadFindSkuByIdResponse;
@@ -60,6 +68,34 @@ public class JdService {
 		req.setField(field);
 		try {
 			CategoryReadFindAttrByIdResponse response = client.execute(req);
+			System.out.println(response.getMsg());
+		} catch (JdException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	// 获取类目属性
+	public void findAttrById() {
+		String field = "categoryAttr,categoryAttrId,categoryId,attName,attrIndexId,attrValueFeatures,categoryAttrGroup";
+		CategoryReadFindAttrByIdRequest req = new CategoryReadFindAttrByIdRequest();
+		req.setField(field);
+		try {
+			CategoryReadFindAttrByIdResponse response = client.execute(req);
+			System.out.println(response.getMsg());
+		} catch (JdException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	// 查询商家已授权的品牌
+	public void queryBrand() {
+		PopVenderCenerVenderBrandQueryRequest request = new PopVenderCenerVenderBrandQueryRequest();
+		// request.setName("jingdong");
+
+		try {
+			PopVenderCenerVenderBrandQueryResponse response = client.execute(request);
 			System.out.println(response.getMsg());
 		} catch (JdException e) {
 			e.printStackTrace();
@@ -93,6 +129,52 @@ public class JdService {
 			e.printStackTrace();
 		}
 
+	}
+
+	// 获取shop类目
+	public void getSellerC() {
+		SellerCatsGetRequest request = new SellerCatsGetRequest();
+
+		try {
+			SellerCatsGetResponse response = client.execute(request);
+			System.out.println(response.getMsg());
+		} catch (JdException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+
+	// 获取类目属性值liebiao
+	public void findValuesByAttrIdJos(Long id) {
+		CategoryReadFindValuesByAttrIdJosRequest request = new CategoryReadFindValuesByAttrIdJosRequest();
+		CategoryReadFindValuesByAttrIdJosResponse response = null;
+		request.setCategoryAttrId(id);
+		// request.setField("jingdong,yanfa,pop");
+
+		try {
+			response = client.execute(request);
+			System.out.println(response.getMsg());
+		} catch (JdException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	// 获取类目属性值
+	public void findValuesById(Long id) {
+		CategoryReadFindValuesByIdRequest request = new CategoryReadFindValuesByIdRequest();
+
+		request.setId(id);
+		// request.setField("jingdong,yanfa,pop");
+
+		try {
+			CategoryReadFindValuesByIdResponse response = client.execute(request);
+			System.out.println(response.getMsg());
+		} catch (JdException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	// 删除图片

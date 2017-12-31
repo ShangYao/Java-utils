@@ -45,6 +45,7 @@ public class ARTD_BInterceptor implements Interceptor {
 		byte[] eventBody = event.getBody();
 		Map<String, String> headers = event.getHeaders();
 		String origBody = new String(eventBody, this.charset);
+		origBody = origBody.replaceAll("\\r\\n|\\r|\\n", " ");
 		String[] body_arr = origBody.split(",");
 
 		String basename = headers.get("basename");
@@ -53,19 +54,20 @@ public class ARTD_BInterceptor implements Interceptor {
 			event.setBody("".getBytes());
 			return event;
 		}
-		if (!GetProp.getARTDBprops().containsKey(body_arr[15])) {
+		if (!GetProp.getARTDBprops().containsKey(body_arr[15])
+				|| !GetProp.getARTDBIDprops().containsKey(body_arr[15])) {
 			erro(body_arr[15], "Gender");
 			errofile(basename, origBody, "A-");
 			event.setBody("".getBytes());
 			return event;
 		}
-		if (!GetProp.getARTDBprops().containsKey(body_arr[6])) {
+		if (!GetProp.getARTDBprops().containsKey(body_arr[6]) || !GetProp.getARTDBIDprops().containsKey(body_arr[6])) {
 			erro(body_arr[6], "Brand");
 			errofile(basename, origBody, "A-");
 			event.setBody("".getBytes());
 			return event;
 		}
-		if (!GetProp.getARTDBprops().containsKey(body_arr[5])) {
+		if (!GetProp.getARTDBprops().containsKey(body_arr[5]) || !GetProp.getARTDBIDprops().containsKey(body_arr[5])) {
 			erro(body_arr[5], "Category");
 			errofile(basename, origBody, "A-");
 			event.setBody("".getBytes());
@@ -79,13 +81,13 @@ public class ARTD_BInterceptor implements Interceptor {
 		trace_info.put("file_name", basename);
 
 		obj.put("version", "1.1.1");
-		obj.put("command", "explore");
+		obj.put("command", "DISCOVER");
 		obj.put("trace", trace_info);
 
 		JSONObject items_info = getItems(body_arr, headers);
 		JSONArray items_arry = new JSONArray().put(items_info);
 		obj.put("items", items_arry);
-		obj.put("references", getreference(body_arr));
+		obj.put("references", getreference(body_arr, headers));
 
 		byte[] modifiedEvent = obj.toString().getBytes();
 		event.setBody(modifiedEvent);
@@ -114,10 +116,11 @@ public class ARTD_BInterceptor implements Interceptor {
 		}
 	}
 
+	// size
 	public JSONObject getdimention(String[] body_arr, int a, String str) {
 		JSONObject info = new JSONObject();
 		info.put("item_type", "Dimension::" + str);
-		info.put("item_id", getSpuRocid(body_arr) + "::" + DigestUtils.md5Hex(body_arr[a]).substring(0, 6));
+		info.put("item_id", getSpuRocid(body_arr) + "::" + DigestUtils.md5Hex(body_arr[a]).substring(0, 7));
 		info.put("key", "");
 		info.put("value", body_arr[a]);
 		return info;
@@ -129,18 +132,18 @@ public class ARTD_BInterceptor implements Interceptor {
 		image1_info.put("item_type", "Image");
 		image1_info.put("item_id", getSpuRocid(body_arr) + "::Red::" + str);
 		image1_info.put("url", body_arr[a]);
-		image1_info.put("origin", " true");
+		image1_info.put("origin", new Boolean("true"));
 		image1_info.put("type", " ");
 		return image1_info;
 
 	}
 
-	public JSONArray getreference(String[] body_arr) {
+	public JSONArray getreference(String[] body_arr, Map<String, String> headers) {
 		JSONArray reference_arry = new JSONArray();
 
 		JSONObject width_info = new JSONObject();
 		width_info.put("item_type", "Dimension::Width");
-		width_info.put("item_id", getSpuRocid(body_arr) + "::" + DigestUtils.md5Hex("").substring(0, 6));
+		width_info.put("item_id", getSpuRocid(body_arr) + "::" + DigestUtils.md5Hex("").substring(0, 7));
 		width_info.put("key", "");
 		width_info.put("value", "");
 
@@ -162,12 +165,12 @@ public class ARTD_BInterceptor implements Interceptor {
 
 		JSONObject title = new JSONObject();
 		title.put("item_type", "Bullet::Title");
-		title.put("item_id", getSpuRocid(body_arr) + "::" + DigestUtils.md5Hex(body_arr[12]).substring(0, 6));
+		title.put("item_id", getSpuRocid(body_arr) + "::" + DigestUtils.md5Hex(body_arr[12]).substring(0, 7));
 		title.put("en", body_arr[12]);
 
 		JSONObject desc = new JSONObject();
 		desc.put("item_type", "Bullet::Desc");
-		desc.put("item_id", getSpuRocid(body_arr) + "::" + DigestUtils.md5Hex(body_arr[13]).substring(0, 6));
+		desc.put("item_id", getSpuRocid(body_arr) + "::" + DigestUtils.md5Hex(body_arr[13]).substring(0, 7));
 		desc.put("en", body_arr[13]);
 
 		album_arry.put(album1);
@@ -186,17 +189,17 @@ public class ARTD_BInterceptor implements Interceptor {
 		reference_arry.put(title);
 
 		reference_arry.put(getfeature(body_arr));
-		reference_arry.put(getsku(body_arr));
+		reference_arry.put(getsku(body_arr, headers));
 		return reference_arry;
 
 	}
 
 	public JSONObject getfeature(String[] body_arr) {
 		JSONObject info = new JSONObject();
-		info.put("item_type", "Bullet::Feature");
+		info.put("item_type", "Bullet::Features");
 		String str = body_arr[16] + body_arr[17] + body_arr[18] + body_arr[19] + body_arr[20] + body_arr[21]
 				+ body_arr[22] + body_arr[23];
-		info.put("item_id", getSpuRocid(body_arr) + "::" + DigestUtils.md5Hex(str).substring(0, 6));
+		info.put("item_id", getSpuRocid(body_arr) + "::" + DigestUtils.md5Hex(str).substring(0, 7));
 
 		JSONArray fea = new JSONArray();
 		fea.put(body_arr[16]);
@@ -207,29 +210,36 @@ public class ARTD_BInterceptor implements Interceptor {
 		fea.put(body_arr[21]);
 		fea.put(body_arr[22]);
 		fea.put(body_arr[23]);
-		info.put("value", fea);
+		info.put("en", fea.toString());
 		return info;
 
 	}
 
-	public JSONObject getsku(String[] body_arr) {
+	public JSONObject getsku(String[] body_arr, Map<String, String> headers) {
 		JSONObject sku_info = new JSONObject();
 		sku_info.put("item_type", "Sku");
 		sku_info.put("item_id", getSkuRocid(body_arr));
-		sku_info.put("meta", "");
+		sku_info.put("meta", getSkumeta(headers));
 		sku_info.put("steady_info", getsteady(body_arr));
 		sku_info.put("dyno_info", getdyno(body_arr));
 		return sku_info;
 
 	}
 
+	public JSONObject getSkumeta(Map<String, String> headers) {
+		JSONObject info = new JSONObject();
+		info.put("timestamp", stringToLong(headers.get("timestamp")));
+		return info;
+
+	}
+
 	public JSONObject getdyno(String[] body_arr) {
 		JSONObject info = new JSONObject();
 		info.put("currency", "USD");
-		info.put("list_price", body_arr[11]);
-		info.put("price", body_arr[10]);
-		info.put("stock", body_arr[27]);
-		info.put("availability", "true");
+		info.put("list_price", stringToDouble(body_arr[11]));
+		info.put("price", stringToDouble(body_arr[10]));
+		info.put("stock", stringToInt(body_arr[27]));
+		info.put("availability", new Boolean("true"));
 		info.put("availability_reason", "");
 		return info;
 
@@ -261,12 +271,11 @@ public class ARTD_BInterceptor implements Interceptor {
 
 	}
 
-	public JSONObject getbullts(String[] body_arr) {
-		JSONObject info = new JSONObject();
-		info.put("title", bullt(body_arr, 12, "Title"));
-		info.put("feature", faeature(body_arr));
-		// info.put("spec", "Dimention::");
-		info.put("description", bullt(body_arr, 13, "Desc"));
+	public JSONArray getbullts(String[] body_arr) {
+		JSONArray info = new JSONArray();
+		info.put(bullt(body_arr, 12, "Title"));
+		info.put(bullt(body_arr, 13, "Desc"));
+		info.put(faeature(body_arr));
 
 		return info;
 
@@ -274,10 +283,10 @@ public class ARTD_BInterceptor implements Interceptor {
 
 	public JSONObject faeature(String[] body_arr) {
 		JSONObject info = new JSONObject();
-		info.put("item_type", "Bullet::Feature");
+		info.put("item_type", "Bullet::Features");
 		String str = body_arr[16] + body_arr[17] + body_arr[18] + body_arr[19] + body_arr[20] + body_arr[21]
 				+ body_arr[22] + body_arr[23];
-		info.put("item_id", getSpuRocid(body_arr) + "::" + DigestUtils.md5Hex(str).substring(0, 6));
+		info.put("item_id", getSpuRocid(body_arr) + "::" + DigestUtils.md5Hex(str).substring(0, 7));
 
 		return info;
 
@@ -286,7 +295,7 @@ public class ARTD_BInterceptor implements Interceptor {
 	public JSONObject bullt(String[] body_arr, int a, String str) {
 		JSONObject info = new JSONObject();
 		info.put("item_type", "Bullet::" + str);
-		info.put("item_id", getSpuRocid(body_arr) + "::" + DigestUtils.md5Hex(body_arr[a]).substring(0, 6));
+		info.put("item_id", getSpuRocid(body_arr) + "::" + DigestUtils.md5Hex(body_arr[a]).substring(0, 7));
 
 		return info;
 
@@ -295,7 +304,7 @@ public class ARTD_BInterceptor implements Interceptor {
 	public JSONObject getskudimention(String[] body_arr, int a, String str) {
 		JSONObject info = new JSONObject();
 		info.put("item_type", "Dimension::" + str);
-		info.put("item_id", getSpuRocid(body_arr) + "::" + DigestUtils.md5Hex(body_arr[a]).substring(0, 6));
+		info.put("item_id", getSpuRocid(body_arr) + "::" + DigestUtils.md5Hex(body_arr[a]).substring(0, 7));
 
 		return info;
 
@@ -368,13 +377,17 @@ public class ARTD_BInterceptor implements Interceptor {
 	public JSONObject getmeta(String[] body_arr, Map<String, String> headers) {
 		JSONObject meta_info = new JSONObject();
 		meta_info.put("source_site_code", "ARTD_B");
-		meta_info.put("all_skus", "false");
+		meta_info.put("source_site_id", 117);
+		meta_info.put("all_skus", new Boolean("false"));
 		meta_info.put("gender", GetProp.getARTDBprops().getString(body_arr[15]));
+		meta_info.put("gender_id", stringToInt(GetProp.getARTDBIDprops().getString(body_arr[15])));
 		meta_info.put("brand", GetProp.getARTDBprops().getString(body_arr[6]));
-		meta_info.put("category", GetProp.getARTDBprops().getString(body_arr[5]));
+		meta_info.put("brand_id", stringToInt(GetProp.getARTDBIDprops().getString(body_arr[6])));
+		meta_info.put("taxon", GetProp.getARTDBprops().getString(body_arr[5]));
+		meta_info.put("taxon_id", stringToInt(GetProp.getARTDBIDprops().getString(body_arr[5])));
 
 		meta_info.put("url", "");
-		meta_info.put("timestamp", headers.get("timestamp"));
+		meta_info.put("timestamp", stringToLong(headers.get("timestamp")));
 		meta_info.put("status_code", "NORMAL");
 		return meta_info;
 
@@ -390,6 +403,27 @@ public class ARTD_BInterceptor implements Interceptor {
 		}
 
 		return events;
+	}
+
+	public Integer stringToInt(String str) {
+
+		int i = Integer.parseInt(str);
+		return i;
+
+	}
+
+	public Double stringToDouble(String str) {
+
+		double i = Double.parseDouble(str);
+		return i;
+
+	}
+
+	public Long stringToLong(String str) {
+
+		Long i = Long.parseLong(str);
+		return i;
+
 	}
 
 	public static class Constants {

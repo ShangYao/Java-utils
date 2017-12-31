@@ -20,5 +20,8 @@
 	</classpathentry>
 	<classpathentry kind="lib" path="lib/open-api-sdk-2.0.jar"/>
 	<classpathentry kind="lib" path="lib/custome-interceptor-1.0.jar"/>
+	<classpathentry kind="lib" path="lib/xz-1.0.jar"/>
+	<classpathentry kind="lib" path="lib/zebra-http-source-handler-1.0-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/derby-10.11.1.1.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

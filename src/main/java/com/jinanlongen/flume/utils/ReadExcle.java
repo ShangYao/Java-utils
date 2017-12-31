@@ -188,6 +188,7 @@ public class ReadExcle {
 			return rowList;
 		} catch (Exception e) {
 			System.out.println("exception");
+			System.out.println(e.getMessage());
 			return null;
 		}
 	}

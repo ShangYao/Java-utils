@@ -26,9 +26,26 @@ public class GetProp {
 		return getprops(artdwfile);
 	}
 
-	public static ResourceBundle getCFWSBprops() {
-		File cewsbfile = new File("D:\\flumes\\conf\\CFWS_B.properties");
-		return getprops(cewsbfile);
+	public static ResourceBundle getARTDBIDprops() {
+		File artdbfile = new File("D:\\flumes\\conf\\ARTD_B_id.properties");
+		return getprops(artdbfile);
+	}
+
+	public static ResourceBundle getARTDWIDprops() {
+		File artdwfile = new File("D:\\flumes\\conf\\ARTD_W_id.properties");
+		return getprops(artdwfile);
+	}
+
+	public static ResourceBundle getCOSMOIDprops() {
+		// File file = new File("D:/flumes/conf/COSMO_id.properties");
+		File file = new File("D:\\flumes\\conf\\COSMO_id.properties");
+		return getprops(file);
+	}
+
+	public static ResourceBundle getCOSMOprops() {
+		// File file = new File("D:/flumes/conf/COSMO.properties");
+		File file = new File("D:\\flumes\\conf\\COSMO.properties");
+		return getprops(file);
 	}
 
 	public static ResourceBundle getprops(File file) {
