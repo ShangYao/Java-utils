@@ -90,6 +90,9 @@ public class HanYuPinYinUtils {
 			for (int i = 0; i < cl_chars.length; i++) {
 				String str = String.valueOf(cl_chars[i]);
 				if (str.matches("[\u4e00-\u9fa5]+")) {// 如果字符是中文,则将中文转为汉语拼音,并取第一个字母
+					if (PinyinHelper.toHanyuPinyinStringArray(cl_chars[i], defaultFormat).length == 0) {
+						return null;
+					}
 					hanyupinyin += PinyinHelper.toHanyuPinyinStringArray(cl_chars[i], defaultFormat)[0];
 				} else if (str.matches("[0-9]+")) {// 如果字符是数字,取数字
 					hanyupinyin += cl_chars[i];

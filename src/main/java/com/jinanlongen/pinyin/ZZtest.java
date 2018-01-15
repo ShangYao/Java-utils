@@ -10,6 +10,8 @@ import java.util.regex.Pattern;
  */
 public class ZZtest {
 	public static void main(String[] args) {
+		System.out.println(HanYuPinYinUtils.getPinyinString("赵德灜"));
+
 		// String pattern = "[\u4e00-\u9fa5\\w]+";
 		String str = "1233445";
 		String str1 = "汉语拼音";

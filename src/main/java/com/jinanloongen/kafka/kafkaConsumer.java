@@ -1,7 +1,6 @@
 package com.jinanloongen.kafka;
 
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,18 +29,17 @@ public class kafkaConsumer extends Thread {
 		Map<String, List<KafkaStream<byte[], byte[]>>> messageStreams = consumer.createMessageStreams(topicCountMap);
 		KafkaStream<byte[], byte[]> stream = messageStreams.get(topic).get(0);// 获取每次接收到的这个数据
 		ConsumerIterator<byte[], byte[]> iterator = stream.iterator();
-
+		int a = 0;
 		while (iterator.hasNext()) {
 			String message = null;
 			try {
 				message = new String(iterator.next().message(), "utf-8");
 			} catch (UnsupportedEncodingException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			System.out.println("接收到: " + message);
 			// System.out.println(iterator.length());
-			System.out.println("----------------------" + Charset.defaultCharset());
+			System.out.println("----------------------" + a++);
 		}
 	}
 
